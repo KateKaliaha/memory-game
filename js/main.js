@@ -1,5 +1,6 @@
 import { APP_TITLE, PAIR_COUNT } from './config.js';
 import { createElement } from './dom.js';
+import { createGameState } from './game.js';
 import { createModal } from './modal.js';
 
 function createButton(label, modifier) {
@@ -63,14 +64,9 @@ function createGameArea() {
     attributes: { 'aria-label': 'Game statistics' },
     children: [moves.element, pairs.element],
   });
-  const placeholder = createElement('p', {
-    classNames: 'board__placeholder',
-    text: 'Cards will appear here.',
-  });
   const board = createElement('section', {
     classNames: 'board',
     attributes: { 'aria-label': 'Memory cards' },
-    children: [placeholder],
   });
   const main = createElement('main', {
     classNames: 'main',
@@ -85,6 +81,52 @@ function createGameArea() {
   };
 }
 
+function createCard(card, index) {
+  const image = createElement('img', {
+    classNames: 'memory-card__image',
+    attributes: {
+      src: card.src,
+      alt: card.alt,
+      draggable: 'false',
+    },
+  });
+  const front = createElement('span', {
+    classNames: ['memory-card__face', 'memory-card__front'],
+    attributes: { 'aria-hidden': 'true' },
+    children: [image],
+  });
+  const backMark = createElement('span', {
+    classNames: 'memory-card__mark',
+    text: 'M',
+    attributes: { 'aria-hidden': 'true' },
+  });
+  const back = createElement('span', {
+    classNames: ['memory-card__face', 'memory-card__back'],
+    attributes: { 'aria-hidden': 'true' },
+    children: [backMark],
+  });
+  const inner = createElement('span', {
+    classNames: 'memory-card__inner',
+    children: [back, front],
+  });
+
+  return createElement('button', {
+    classNames: 'memory-card',
+    attributes: {
+      type: 'button',
+      'aria-label': `Hidden memory card ${index + 1}`,
+      'aria-pressed': 'false',
+    },
+    dataset: { cardId: card.instanceId },
+    children: [inner],
+  });
+}
+
+function renderBoard(board, cards) {
+  const cardElements = cards.map(createCard);
+  board.replaceChildren(...cardElements);
+}
+
 function createApp() {
   const header = createHeader();
   const gameArea = createGameArea();
@@ -95,6 +137,18 @@ function createApp() {
   const modal = createModal();
 
   document.body.append(app, modal.dialog);
+  let gameState;
+
+  function startNewGame() {
+    gameState = createGameState();
+
+    gameArea.movesValue.textContent = String(gameState.moves);
+    gameArea.pairsValue.textContent = `${gameState.matchedPairs} / ${PAIR_COUNT}`;
+    renderBoard(gameArea.board, gameState.cards);
+  }
+
+  header.newGameButton.addEventListener('click', startNewGame);
+  startNewGame();
 }
 
 createApp();

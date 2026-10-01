@@ -1,6 +1,10 @@
-import { APP_TITLE, PAIR_COUNT } from './config.js';
+import { APP_TITLE, MISMATCH_DELAY, PAIR_COUNT } from './config.js';
 import { createElement } from './dom.js';
-import { createGameState } from './game.js';
+import {
+  closeMismatchedCards,
+  createGameState,
+  selectCard,
+} from './game.js';
 import { createModal } from './modal.js';
 
 function createButton(label, modifier) {
@@ -117,7 +121,10 @@ function createCard(card, index) {
       'aria-label': `Hidden memory card ${index + 1}`,
       'aria-pressed': 'false',
     },
-    dataset: { cardId: card.instanceId },
+    dataset: {
+      cardId: card.instanceId,
+      hiddenLabel: `Hidden memory card ${index + 1}`,
+    },
     children: [inner],
   });
 }
@@ -125,6 +132,10 @@ function createCard(card, index) {
 function renderBoard(board, cards) {
   const cardElements = cards.map(createCard);
   board.replaceChildren(...cardElements);
+
+  return new Map(
+    cardElements.map((cardElement) => [cardElement.dataset.cardId, cardElement]),
+  );
 }
 
 function createApp() {
@@ -138,15 +149,77 @@ function createApp() {
 
   document.body.append(app, modal.dialog);
   let gameState;
+  let cardElements = new Map();
 
-  function startNewGame() {
-    gameState = createGameState();
-
+  function updateStats() {
     gameArea.movesValue.textContent = String(gameState.moves);
     gameArea.pairsValue.textContent = `${gameState.matchedPairs} / ${PAIR_COUNT}`;
-    renderBoard(gameArea.board, gameState.cards);
   }
 
+  function updateCard(card) {
+    const cardElement = cardElements.get(card.instanceId);
+
+    if (!cardElement) {
+      return;
+    }
+
+    cardElement.classList.toggle('memory-card--flipped', card.isFlipped);
+    cardElement.classList.toggle('memory-card--matched', card.isMatched);
+    cardElement.setAttribute('aria-pressed', String(card.isFlipped));
+    cardElement.disabled = card.isMatched;
+
+    if (card.isMatched) {
+      cardElement.setAttribute('aria-label', `Matched card: ${card.alt}`);
+    } else if (card.isFlipped) {
+      cardElement.setAttribute('aria-label', `Open card: ${card.alt}`);
+    } else {
+      cardElement.setAttribute('aria-label', cardElement.dataset.hiddenLabel);
+    }
+  }
+
+  function handleCardSelect(event) {
+    const cardElement = event.target.closest('[data-card-id]');
+
+    if (!cardElement || !gameArea.board.contains(cardElement)) {
+      return;
+    }
+
+    const selection = selectCard(gameState, cardElement.dataset.cardId);
+
+    if (selection.type === 'ignored') {
+      return;
+    }
+
+    selection.cards.forEach(updateCard);
+    updateStats();
+
+    if (selection.type !== 'mismatch') {
+      return;
+    }
+
+    const scheduledGame = gameState;
+    scheduledGame.mismatchTimerId = window.setTimeout(() => {
+      const closedCards = closeMismatchedCards(scheduledGame);
+
+      if (scheduledGame !== gameState) {
+        return;
+      }
+
+      closedCards.forEach(updateCard);
+    }, MISMATCH_DELAY);
+  }
+
+  function startNewGame() {
+    if (gameState && gameState.mismatchTimerId !== null) {
+      window.clearTimeout(gameState.mismatchTimerId);
+    }
+
+    gameState = createGameState();
+    cardElements = renderBoard(gameArea.board, gameState.cards);
+    updateStats();
+  }
+
+  gameArea.board.addEventListener('click', handleCardSelect);
   header.newGameButton.addEventListener('click', startNewGame);
   startNewGame();
 }

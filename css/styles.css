@@ -220,6 +220,14 @@ button {
   outline-offset: 3px;
 }
 
+.memory-card:disabled {
+  cursor: default;
+}
+
+.memory-card:disabled:hover {
+  transform: none;
+}
+
 .memory-card__inner {
   position: absolute;
   inset: 0;
@@ -228,6 +236,16 @@ button {
   box-shadow: 0 9px 20px rgb(49 42 92 / 16%);
   transform-style: preserve-3d;
   transition: transform 380ms ease;
+}
+
+.memory-card--flipped .memory-card__inner {
+  transform: rotateY(180deg);
+}
+
+.memory-card--matched .memory-card__inner {
+  box-shadow:
+    0 0 0 3px rgb(101 88 211 / 22%),
+    0 9px 20px rgb(49 42 92 / 12%);
 }
 
 .memory-card__face {

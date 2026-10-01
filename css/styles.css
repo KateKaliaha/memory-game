@@ -348,6 +348,66 @@ button {
   margin-top: 24px;
 }
 
+.leaderboard {
+  overflow-x: auto;
+}
+
+.leaderboard__table {
+  width: 100%;
+  table-layout: fixed;
+  border-spacing: 0;
+  border-collapse: separate;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard__table th:first-child,
+.leaderboard__table td:first-child {
+  width: 24%;
+}
+
+.leaderboard__table th:nth-child(2),
+.leaderboard__table td:nth-child(2) {
+  width: 26%;
+}
+
+.leaderboard__table th:last-child,
+.leaderboard__table td:last-child {
+  width: 50%;
+}
+
+.leaderboard__table th,
+.leaderboard__table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.leaderboard__table th {
+  color: var(--color-text-muted);
+  background: var(--color-surface-muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.leaderboard__table th:first-child {
+  border-radius: 12px 0 0;
+}
+
+.leaderboard__table th:last-child {
+  border-radius: 0 12px 0 0;
+}
+
+.leaderboard__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.leaderboard__table td:nth-child(2) {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
 @media (max-width: 620px) {
   .app {
     width: min(100% - 20px, var(--page-width));
@@ -384,6 +444,25 @@ button {
   .board {
     padding: 10px;
     border-radius: 22px;
+  }
+
+  .modal {
+    width: min(100% - 20px, 520px);
+  }
+
+  .modal__surface {
+    padding: 22px 18px;
+  }
+
+  .leaderboard__table th,
+  .leaderboard__table td {
+    padding: 10px 5px;
+    font-size: 0.88rem;
+  }
+
+  .leaderboard__table th {
+    font-size: 0.7rem;
+    letter-spacing: 0.03em;
   }
 }
 

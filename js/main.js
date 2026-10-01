@@ -5,7 +5,9 @@ import {
   createGameState,
   selectCard,
 } from './game.js';
+import { loadResults, saveResult } from './leaderboard.js';
 import { createModal } from './modal.js';
+import { formatDate } from './utils.js';
 
 function createButton(label, modifier) {
   return createElement('button', {
@@ -31,6 +33,7 @@ function createHeader() {
   });
   const newGameButton = createButton('New game', 'button--primary');
   const leaderboardButton = createButton('Leaderboard');
+  leaderboardButton.setAttribute('aria-haspopup', 'dialog');
   const actions = createElement('div', {
     classNames: 'header__actions',
     children: [newGameButton, leaderboardButton],
@@ -177,6 +180,67 @@ function createApp() {
     });
   }
 
+  function createLeaderboardTable(results) {
+    const headerRow = createElement('tr', {
+      children: [
+        createElement('th', {
+          text: 'Place',
+          attributes: { scope: 'col' },
+        }),
+        createElement('th', {
+          text: 'Moves',
+          attributes: { scope: 'col' },
+        }),
+        createElement('th', {
+          text: 'Date',
+          attributes: { scope: 'col' },
+        }),
+      ],
+    });
+    const tableHead = createElement('thead', { children: [headerRow] });
+    const resultRows = results.map((result, index) =>
+      createElement('tr', {
+        children: [
+          createElement('td', { text: String(index + 1) }),
+          createElement('td', { text: String(result.moves) }),
+          createElement('td', { text: formatDate(result.completedAt) }),
+        ],
+      }),
+    );
+    const tableBody = createElement('tbody', { children: resultRows });
+    const table = createElement('table', {
+      classNames: 'leaderboard__table',
+      children: [tableHead, tableBody],
+    });
+
+    return createElement('div', {
+      classNames: 'leaderboard',
+      children: [table],
+    });
+  }
+
+  function showLeaderboardModal() {
+    const results = loadResults();
+    const content =
+      results.length === 0
+        ? createElement('p', {
+            classNames: 'modal__message',
+            text: 'No results yet.',
+          })
+        : createLeaderboardTable(results);
+    const closeButton = createButton('Close', 'button--primary');
+
+    closeButton.addEventListener('click', modal.closeModal);
+
+    modal.openModal({
+      heading: 'Leaderboard',
+      contentNodes: [content],
+      actionNodes: [closeButton],
+      initialFocus: closeButton,
+      returnFocus: header.leaderboardButton,
+    });
+  }
+
   function updateCard(card) {
     const cardElement = cardElements.get(card.instanceId);
 
@@ -215,6 +279,11 @@ function createApp() {
     updateStats();
 
     if (selection.isComplete) {
+      if (!gameState.resultSaved) {
+        saveResult(gameState.moves);
+        gameState.resultSaved = true;
+      }
+
       showVictoryModal();
       return;
     }
@@ -248,6 +317,7 @@ function createApp() {
 
   gameArea.board.addEventListener('click', handleCardSelect);
   header.newGameButton.addEventListener('click', startNewGame);
+  header.leaderboardButton.addEventListener('click', showLeaderboardModal);
   startNewGame();
 }
 

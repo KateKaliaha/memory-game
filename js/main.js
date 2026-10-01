@@ -156,6 +156,27 @@ function createApp() {
     gameArea.pairsValue.textContent = `${gameState.matchedPairs} / ${PAIR_COUNT}`;
   }
 
+  function showVictoryModal() {
+    const movesWord = gameState.moves === 1 ? 'move' : 'moves';
+    const message = createElement('p', {
+      classNames: 'modal__message',
+      text: `You found all ${PAIR_COUNT} pairs in ${gameState.moves} ${movesWord}.`,
+    });
+    const newGameButton = createButton('New game', 'button--primary');
+    const closeButton = createButton('Close');
+
+    newGameButton.addEventListener('click', startNewGame);
+    closeButton.addEventListener('click', modal.closeModal);
+
+    modal.openModal({
+      heading: 'You won!',
+      contentNodes: [message],
+      actionNodes: [closeButton, newGameButton],
+      initialFocus: newGameButton,
+      returnFocus: header.newGameButton,
+    });
+  }
+
   function updateCard(card) {
     const cardElement = cardElements.get(card.instanceId);
 
@@ -193,6 +214,11 @@ function createApp() {
     selection.cards.forEach(updateCard);
     updateStats();
 
+    if (selection.isComplete) {
+      showVictoryModal();
+      return;
+    }
+
     if (selection.type !== 'mismatch') {
       return;
     }
@@ -214,6 +240,7 @@ function createApp() {
       window.clearTimeout(gameState.mismatchTimerId);
     }
 
+    modal.closeModal();
     gameState = createGameState();
     cardElements = renderBoard(gameArea.board, gameState.cards);
     updateStats();

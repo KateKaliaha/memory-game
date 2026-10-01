@@ -44,6 +44,10 @@ body {
     var(--color-background);
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 button {
   font: inherit;
 }
@@ -327,6 +331,13 @@ button {
 .modal__title {
   margin: 0 0 16px;
   font-size: 1.55rem;
+}
+
+.modal__message {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
 }
 
 .modal__actions {

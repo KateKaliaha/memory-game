@@ -29,6 +29,7 @@ export function createGameState() {
     isLocked: false,
     isComplete: false,
     mismatchTimerId: null,
+    victoryTimerId: null,
     resultSaved: false,
   };
 }

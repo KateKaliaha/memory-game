@@ -1,4 +1,9 @@
-import { APP_TITLE, MISMATCH_DELAY, PAIR_COUNT } from './config.js';
+import {
+  APP_TITLE,
+  MISMATCH_DELAY,
+  PAIR_COUNT,
+  VICTORY_MODAL_DELAY,
+} from './config.js';
 import { createElement } from './dom.js';
 import {
   closeMismatchedCards,
@@ -284,7 +289,16 @@ function createApp() {
         gameState.resultSaved = true;
       }
 
-      showVictoryModal();
+      const completedGame = gameState;
+      completedGame.victoryTimerId = window.setTimeout(() => {
+        completedGame.victoryTimerId = null;
+
+        if (completedGame !== gameState) {
+          return;
+        }
+
+        showVictoryModal();
+      }, VICTORY_MODAL_DELAY);
       return;
     }
 
@@ -307,6 +321,10 @@ function createApp() {
   function startNewGame() {
     if (gameState && gameState.mismatchTimerId !== null) {
       window.clearTimeout(gameState.mismatchTimerId);
+    }
+
+    if (gameState && gameState.victoryTimerId !== null) {
+      window.clearTimeout(gameState.victoryTimerId);
     }
 
     modal.closeModal();
